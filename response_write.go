@@ -2,20 +2,26 @@ package rewrite
 
 import (
 	"net/http"
-
-	"github.com/Qs-F/bort"
 )
 
 type ResponseWrite struct {
 	w  http.ResponseWriter
-	rw *Rewrite
+	rw Rewriter
+}
+
+type Rewriter interface {
+	Rewrite(p []byte) []byte
+}
+
+func NewResponseWrite(w http.ResponseWriter, rw Rewriter) *ResponseWrite {
+	return &ResponseWrite{
+		w:  w,
+		rw: rw,
+	}
 }
 
 func (w *ResponseWrite) Write(p []byte) (int, error) {
-	if !bort.IsBin(p) {
-		return w.w.Write([]byte(w.rw.ToReplacer().Replace(string(p))))
-	}
-	return w.w.Write(p)
+	return w.w.Write(w.rw.Rewrite(p))
 }
 
 func (w *ResponseWrite) Header() http.Header {
