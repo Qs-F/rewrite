@@ -6,13 +6,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
+	"path"
 	"testing"
 )
 
 type T struct {
-	Handler http.Handler
-	Rule    *Rule
-	Expect  string
+	Handler  http.Handler
+	FilePath string
+	Rule     *Rule
+	Expect   string
 }
 
 func TestMap(t *testing.T) {
@@ -64,31 +67,44 @@ func TestMap(t *testing.T) {
 					New: "Gopher",
 				},
 			},
-			Expect: "Hello 日本",
+			Expect: "Hello Gopher",
 		},
 		{
-			Handler: http.FileServer(http.Dir("./_testdata/helloworld")),
+			Handler:  http.FileServer(http.Dir("./_testdata")),
+			FilePath: "/helloworld",
 			Rule: &Rule{
 				{
 					Old: "world",
 					New: "gopher",
 				},
 			},
-			Expect: "hello gopher",
+			Expect: "hello gopher\n",
+		},
+		{
+			Handler:  http.FileServer(http.Dir("./_testdata")),
+			FilePath: "/notawesomefile",
+			Rule: &Rule{
+				{
+					Old: "404",
+					New: "four-zero-four",
+				},
+			},
+			Expect: "four-zero-four page not found\n",
 		},
 	}
 
 	for i, test := range tests {
-		t.Log("testcase: ", i)
 		srv := httptest.NewServer(test.Rule.Map(test.Handler))
-		resp, err := http.Get(srv.URL)
+		url, _ := url.Parse(srv.URL)
+		url.Path = path.Join(url.Path, test.FilePath)
+		t.Log(url)
+		resp, err := http.Get(url.String())
 		if err != nil {
 			t.Error(err)
 			continue
 		}
 
 		body, err := ioutil.ReadAll(resp.Body)
-		resp.Body.Close()
 		if err != nil {
 			t.Error(err)
 			continue
@@ -98,6 +114,9 @@ func TestMap(t *testing.T) {
 			t.Error(fmt.Sprintf("test %d: expect: %s but get: %s\n", i, test.Expect, string(body)))
 			continue
 		}
+
+		t.Log(fmt.Sprintf("test %d: get: %s\n", i, string(body)))
+		resp.Body.Close()
 		srv.Close()
 	}
 }
