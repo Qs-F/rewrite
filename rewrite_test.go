@@ -53,9 +53,33 @@ func TestMap(t *testing.T) {
 			},
 			Expect: "Hello 日本",
 		},
+		{
+			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("gopher", "hello")
+				fmt.Fprintf(w, "Hello World")
+			}),
+			Rule: &Rule{
+				{
+					Old: "World",
+					New: "Gopher",
+				},
+			},
+			Expect: "Hello 日本",
+		},
+		{
+			Handler: http.FileServer(http.Dir("./_testdata/helloworld")),
+			Rule: &Rule{
+				{
+					Old: "world",
+					New: "gopher",
+				},
+			},
+			Expect: "hello gopher",
+		},
 	}
 
 	for i, test := range tests {
+		t.Log("testcase: ", i)
 		srv := httptest.NewServer(test.Rule.Map(test.Handler))
 		resp, err := http.Get(srv.URL)
 		if err != nil {
