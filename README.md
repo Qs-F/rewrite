@@ -10,16 +10,16 @@ pkg `rewrite` provides the http.ResponseWriter implementation and Replacer of th
 
 ```go
 func main() {
-	rw := &Rule{
+  rw := &Rule{
     {
       Old: "world",
       New: "gopher",
     },
-	}
-	http.Handle("/", rw.RewriteFunc(func(w http.ResponseWriter, r *http.Request) {
+  }
+  http.Handle("/", rw.RewriteFunc(func(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "hello world")
   }))
-	http.ListenAndServe(":8080", nil)
+  http.ListenAndServe(":8080", nil)
 }
 // Open localhost:8080, then you will get "hello gopher"
 ```
