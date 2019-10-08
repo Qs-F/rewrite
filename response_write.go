@@ -28,9 +28,12 @@ func (w *ResponseWrite) Write(p []byte) (int, error) {
 }
 
 func (w *ResponseWrite) Header() http.Header {
-	return w.Header()
+	return w.w.Header()
 }
 
 func (w *ResponseWrite) WriteHeader(statusCode int) {
-	w.WriteHeader(statusCode)
+	// http.FileServer seems automatically set Content-Length at called time.
+	// But it is needed to rewrite the content after that, depending Go's functionality that if there is no Cotent-Length it will be automatically solved is good idea.
+	w.w.Header().Del("Content-Length")
+	w.w.WriteHeader(statusCode)
 }
