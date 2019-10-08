@@ -1,8 +1,11 @@
 package rewrite
 
 import (
+	"bytes"
 	"net/http"
 	"strings"
+
+	"github.com/Qs-F/bort"
 )
 
 type Replace struct {
@@ -10,32 +13,30 @@ type Replace struct {
 	New string
 }
 
-type Rewrite struct {
-	Replaces []*Replace
-}
+type Rule []*Replace
 
-func (r *Rewrite) ToReplacer() *strings.Replacer {
+func (rl *Rule) ToReplacer() *strings.Replacer {
 	replaces := []string{}
-	for _, rw := range r.Replaces {
-		replaces = append(replaces, rw.Old, rw.New)
+	for _, rep := range *rl {
+		replaces = append(replaces, rep.Old, rep.New)
 	}
 	return strings.NewReplacer(replaces...)
 }
 
-func (rw *Rewrite) NewResponseWrite(w http.ResponseWriter) *ResponseWrite {
-	return &ResponseWrite{w: w, rw: rw}
+func (rl *Rule) Rewrite(p []byte) []byte {
+	if isbin, err := bort.IsBin(bytes.NewReader(p)); err != nil || isbin {
+		return p
+	}
+	return []byte(rl.ToReplacer().Replace(string(p)))
 }
 
-func (rw *Rewrite) Rewrite(handler http.Handler) http.Handler {
+func (rl *Rule) Map(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		nw := rw.NewResponseWrite(w)
-		handler.ServeHTTP(nw, r)
+		rw := NewResponseWrite(w, rl)
+		h.ServeHTTP(rw, r)
 	})
 }
 
-func (rw *Rewrite) RewriteFunc(hf http.HandlerFunc) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		nw := rw.NewResponseWrite(w)
-		hf.ServeHTTP(nw, r)
-	})
+func (rl *Rule) MapFunc(hf http.HandlerFunc) http.Handler {
+	return rl.Map(hf)
 }
