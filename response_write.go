@@ -4,11 +4,13 @@ import (
 	"net/http"
 )
 
+// ResponseWrite is http.ResponseWriter interface implementation.
 type ResponseWrite struct {
 	w  http.ResponseWriter
 	rw Rewriter
 }
 
+// Rewriter interface is used to rewrite content based on original content.
 type Rewriter interface {
 	Rewrite(p []byte) []byte
 }
@@ -20,6 +22,7 @@ func NewResponseWrite(w http.ResponseWriter, rw Rewriter) *ResponseWrite {
 	}
 }
 
+// Write writes content which is returned from Rewriter to p.
 func (w *ResponseWrite) Write(p []byte) (int, error) {
 	return w.w.Write(w.rw.Rewrite(p))
 }
