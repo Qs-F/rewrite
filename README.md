@@ -16,7 +16,7 @@ func main() {
       New: "gopher",
     },
   }
-  http.Handle("/", rw.RewriteFunc(func(w http.ResponseWriter, r *http.Request) {
+  http.Handle("/", rw.MapFunc(func(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "hello world")
   }))
   http.ListenAndServe(":8080", nil)
