@@ -23,3 +23,7 @@ func main() {
 }
 // Open localhost:8080, then you will get "hello gopher"
 ```
+
+## LICENSE
+
+MIT
