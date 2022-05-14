@@ -70,7 +70,7 @@ func TestMap(t *testing.T) {
 			Expect: "Hello Gopher",
 		},
 		{
-			Handler:  http.FileServer(http.Dir("./_testdata")),
+			Handler:  http.FileServer(http.Dir("./testdata")),
 			FilePath: "/helloworld",
 			Rule: &Rule{
 				{
@@ -81,7 +81,7 @@ func TestMap(t *testing.T) {
 			Expect: "hello gopher\n",
 		},
 		{
-			Handler:  http.FileServer(http.Dir("./_testdata")),
+			Handler:  http.FileServer(http.Dir("./testdata")),
 			FilePath: "/notawesomefile",
 			Rule: &Rule{
 				{
